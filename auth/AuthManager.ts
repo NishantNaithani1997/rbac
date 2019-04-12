@@ -1,6 +1,6 @@
 import * as express from "express";
-import { IAuthConfig, IRule } from './auth/types';
-import AuthorizationManager from './auth/authorization/AuthorizationManager';
+import { IAuthConfig, IRule } from './types';
+import AuthorizationManager from './authorization/AuthorizationManager';
 
 export default class AuthManager {
 
