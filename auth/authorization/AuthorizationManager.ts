@@ -31,7 +31,15 @@ export default class AuthorizationManager {
 
 		if (typeof matchedRule && matchedRule) {
 			const { allow } = matchedRule;
-			const auth = Object.keys(allow).every((key) => userRoles.hasOwnProperty(key) && allow[key] === userRoles[key] );			
+			const auth = Object.keys(allow).every((key) => {
+				if (userRoles.hasOwnProperty(key)) {
+					if (Array.isArray(allow[key])) {
+						return allow[key].includes(userRoles[key]);
+					}
+				}
+				return false;
+			});
+			// userRoles.hasOwnProperty(key) && allow[key] === userRoles[key] );			
 			if (auth) {
 				return false;
 			}
