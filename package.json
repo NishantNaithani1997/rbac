@@ -8,7 +8,7 @@
     "build": "tsc",
     "postinstall": "npm run build",
     "prestart": "npm run remove-dist",
-    "start": "cross-env NODE_ENV=local tsc-watch --project . --outDir ./dist --onSuccess \"npm run nodemon\" --onFailure \"echo Beep! Compilation Failed\"",
+    "start": "tsc-watch --project . --outDir ./dist --onSuccess \"npm run nodemon\" --onFailure \"echo Beep! Compilation Failed\"",
     "nodemon": "nodemon ./dist/index.js",
     "remove-dist": "rm -rf ./dist"
   },
