@@ -3,7 +3,7 @@ import { IRule, IUserDetails, IRequestDetails } from '../types';
 export default class AuthorizationManager {
 
 	private static instance: AuthorizationManager;
-	public static config: any;
+	private static config: any;
 
 
 	static getInstance (): AuthorizationManager {
@@ -17,20 +17,23 @@ export default class AuthorizationManager {
 
 		const { baseUrl, path, method } = reqDetails;
 		const { userRoles } = userDetails;
+
 		const requestedPath = baseUrl + path;
 		const pathRegex = new RegExp(requestedPath);
 
 		permissions = this.simplifyRules(permissions);
 
-		const matchedRule: any = permissions.forEach((rule) => {
-			if (rule.methods.includes(method) && pathRegex.exec(rule.route) ) {
-				return rule;
+		let matchedRule;
+		permissions.forEach((rule) => {
+			if (rule.methods.includes(method) && pathRegex.exec(rule.route)) {
+				matchedRule = rule;
 			}
-			return false;
 		});
+
 
 		if (typeof matchedRule && matchedRule) {
 			const { allow } = matchedRule;
+
 			const auth = Object.keys(allow).every((key) => {
 				if (userRoles.hasOwnProperty(key)) {
 					if (Array.isArray(allow[key])) {
@@ -39,27 +42,25 @@ export default class AuthorizationManager {
 				}
 				return false;
 			});
-			// userRoles.hasOwnProperty(key) && allow[key] === userRoles[key] );			
-			if (auth) {
-				return false;
-			}
 
-			return true;
+			return auth;
 		}
 
 		return false;
 	}
 
-	simplifyRules = (rules: any) => {
-		return rules.map((rule: any) => {
+	private simplifyRules = (rules: any) => {
+		const data = rules.map((rule: any) => {
 			const { allow } = rule;
 			Object.keys(allow).forEach((key: any) => {
 				allow[key] = this.simplifyAllow(allow[key]);
 			})
+			return rule;
 		});
+		return data;
 	}
 
-	simplifyAllow = (condition: string) => {
+	private simplifyAllow = (condition: string) => {
 		return condition.split('||').map(item => item.trim().toLowerCase());
 	}
 

@@ -18,14 +18,14 @@ export default class AuthManager {
 	}
 
 
-	init = (rules: IRule[], configurations: IAuthConfig) => {
+	public init = (rules: IRule[], configurations: IAuthConfig) => {
     AuthManager.permissions = rules;
 		AuthManager.config = configurations;
 		AuthManager.authorizationManager = AuthorizationManager.getInstance();
 	}
 
 
-	auth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+	public auth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
 		try {
 
@@ -41,9 +41,9 @@ export default class AuthManager {
 			if (AuthManager.config.active) {
 				if (AuthManager.permissions.length) {
 					const authorized: boolean = AuthManager.authorizationManager.authorize(AuthManager.permissions, userData, requestData);
-					if (authorized) {
 
-						return next();
+					if (authorized) {
+						return next('PASSED');
 					}
 
 					return res.json(new Error('User is not authorized for the particular route'));
