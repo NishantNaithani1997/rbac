@@ -1,22 +1,21 @@
 import { IRule, IUserDetails, IRequestDetails } from '../types';
 
-export default class AuthorizationManager {
+class AuthorizationManager {
 
-	private static instance: AuthorizationManager;
-	private static config: any;
-
-
-	static getInstance (): AuthorizationManager {
-		if (!AuthorizationManager.instance) {
-			AuthorizationManager.instance = new AuthorizationManager();
-		}
-		return AuthorizationManager.instance;
-	}
-
+	/**
+	 * Method for returning the final result in boolean value
+	 * @param permissions Array of rules a service added for restricting the access
+	 * @param userDetails User details containg the roles assigned to him/her
+	 * @param reqDetails Details of the request by which a specific rule will be verified for the user details
+	 */
 	authorize = (permissions: IRule[], userDetails: IUserDetails, reqDetails: IRequestDetails) => {
 
 		const { baseUrl, path, method } = reqDetails;
 		const { userRoles } = userDetails;
+
+		if (!(typeof userRoles && userRoles)) {
+			return false;
+		}
 
 		const requestedPath = baseUrl + path;
 		const pathRegex = new RegExp(requestedPath);
@@ -49,6 +48,10 @@ export default class AuthorizationManager {
 		return false;
 	}
 
+	/**
+	 * Method for simplyfing the details in rules
+	 * @param rules Array of rules
+	 */
 	private simplifyRules = (rules: any) => {
 		const data = rules.map((rule: any) => {
 			const { allow } = rule;
@@ -60,8 +63,14 @@ export default class AuthorizationManager {
 		return data;
 	}
 
+	/**
+	 * Method for simplifying the allow field of a rule
+	 * @param condition String with '||' separator
+	 */
 	private simplifyAllow = (condition: string) => {
 		return condition.split('||').map(item => item.trim().toLowerCase());
 	}
 
 }
+
+export default new AuthorizationManager();
