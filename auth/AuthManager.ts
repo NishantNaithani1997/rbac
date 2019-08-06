@@ -2,30 +2,28 @@ import * as express from "express";
 import { IAuthConfig, IRule } from './types';
 import AuthorizationManager from './authorization/AuthorizationManager';
 
-export default class AuthManager {
+class AuthManager {
 
-  private static instance: AuthManager;
   private static config: IAuthConfig;
 	private static permissions: IRule[];
-	private static authorizationManager: AuthorizationManager;
 
-  static getInstance(): AuthManager {
-		if (!AuthManager.instance) {
-			AuthManager.instance = new AuthManager();
-		}
-
-		return AuthManager.instance;
-	}
-
-
-	init = (rules: IRule[], configurations: IAuthConfig) => {
+	/**
+	 * Method for intialising the package
+	 * @param rules Array of rules/permissions a service want top restrict access
+	 * @param configurations Configurations
+	 */
+	public init = (rules: IRule[], configurations: IAuthConfig) => {
     AuthManager.permissions = rules;
 		AuthManager.config = configurations;
-		AuthManager.authorizationManager = AuthorizationManager.getInstance();
 	}
 
-
-	auth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+	/**
+	 * Method for returning the authorization result
+	 * @param req Request object
+	 * @param res Response object
+	 * @param next Next will be the transfer of the response to the next function
+	 */
+	public auth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
 		try {
 
@@ -40,9 +38,9 @@ export default class AuthManager {
 
 			if (AuthManager.config.active) {
 				if (AuthManager.permissions.length) {
-					const authorized: boolean = AuthManager.authorizationManager.authorize(AuthManager.permissions, userData, requestData);
-					if (authorized) {
+					const authorized: boolean = AuthorizationManager.authorize(AuthManager.permissions, userData, requestData);
 
+					if (authorized) {
 						return next();
 					}
 
@@ -66,3 +64,5 @@ export default class AuthManager {
 	}
 
 }
+
+export default new AuthManager();

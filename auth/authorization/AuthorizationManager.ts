@@ -1,58 +1,76 @@
 import { IRule, IUserDetails, IRequestDetails } from '../types';
 
-export default class AuthorizationManager {
+class AuthorizationManager {
 
-	private static instance: AuthorizationManager;
-	public static config: any;
-
-
-	static getInstance (): AuthorizationManager {
-		if (!AuthorizationManager.instance) {
-			AuthorizationManager.instance = new AuthorizationManager();
-		}
-		return AuthorizationManager.instance;
-	}
-
+	/**
+	 * Method for returning the final result in boolean value
+	 * @param permissions Array of rules a service added for restricting the access
+	 * @param userDetails User details containg the roles assigned to him/her
+	 * @param reqDetails Details of the request by which a specific rule will be verified for the user details
+	 */
 	authorize = (permissions: IRule[], userDetails: IUserDetails, reqDetails: IRequestDetails) => {
 
 		const { baseUrl, path, method } = reqDetails;
 		const { userRoles } = userDetails;
+
+		if (!(typeof userRoles && userRoles)) {
+			return false;
+		}
+
 		const requestedPath = baseUrl + path;
 		const pathRegex = new RegExp(requestedPath);
 
 		permissions = this.simplifyRules(permissions);
 
-		const matchedRule: any = permissions.forEach((rule) => {
-			if (rule.methods.includes(method) && pathRegex.exec(rule.route) ) {
-				return rule;
+		let matchedRule;
+		permissions.forEach((rule) => {
+			if (rule.methods.includes(method) && pathRegex.exec(rule.route)) {
+				matchedRule = rule;
 			}
-			return false;
 		});
+
 
 		if (typeof matchedRule && matchedRule) {
 			const { allow } = matchedRule;
-			const auth = Object.keys(allow).every((key) => userRoles.hasOwnProperty(key) && allow[key] === userRoles[key] );			
-			if (auth) {
-				return false;
-			}
 
-			return true;
+			const auth = Object.keys(allow).every((key) => {
+				if (userRoles.hasOwnProperty(key)) {
+					if (Array.isArray(allow[key])) {
+						return allow[key].includes(userRoles[key]);
+					}
+				}
+				return false;
+			});
+
+			return auth;
 		}
 
 		return false;
 	}
 
-	simplifyRules = (rules: any) => {
-		return rules.map((rule: any) => {
+	/**
+	 * Method for simplyfing the details in rules
+	 * @param rules Array of rules
+	 */
+	private simplifyRules = (rules: any) => {
+		const data = rules.map((rule: any) => {
 			const { allow } = rule;
 			Object.keys(allow).forEach((key: any) => {
 				allow[key] = this.simplifyAllow(allow[key]);
 			})
+			return rule;
 		});
+		return data;
 	}
 
-	simplifyAllow = (condition: string) => {
+	/**
+	 * Method for simplifying the allow field of a rule
+	 * @param condition String with '||' separator
+	 */
+	private simplifyAllow = (condition: string) => {
 		return condition.split('||').map(item => item.trim().toLowerCase());
 	}
 
 }
+
+export default new AuthorizationManager();
